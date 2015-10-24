@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.http import HttpResponse
 import requests
 import json
 
@@ -33,19 +34,29 @@ def tour(request):
     param_array = []
 
     for l in xrange(0,len(landmarks),2):
-        param_array.append(str(landmarks[1])+","+str(landmarks[l+1]))
+        param_array.append(str(landmarks[l])+","+str(landmarks[l+1]))
 
     params = "|".join(param_array)
 
-    r = requests.get("https://maps.googleapis.com/maps/api/distancematrix/json?origins="+params+"&destinations="+params+"key="+key)
+    url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+params+"&destinations="+params+"&key="+key
 
-    obj = json.load(r.text)
+    print url
 
-    calc_path()
+    r = requests.get(url)
+
+    print params
+
+    #obj = json.load(r.text)
+
+    #print(obj)
+
+
+
+    #calc_path()
 
     #obj.rows.elements[i].duration[j].value
 
-    pass
+    return HttpResponse(r.text)
 
 def calc_path():
 
