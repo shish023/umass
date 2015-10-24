@@ -10,11 +10,63 @@ from .models import Landmark
 
 # Create your views here.
 
-def calc_path():
 
-    #TODO
 
-    pass
+
+
+
+def tour(home, landmarks, time_left, obj):
+    path = [home]
+    no_of_landmarks = len(landmarks)
+    current = [home]
+
+    while(len(path) < no_of_landmarks):
+
+        next = find_next_landmark(home, current, landmarks, time_left)
+
+        if next == []:
+            return path
+        else:
+            path.append(next)
+            time_left -= distance(current,next)
+            current = next
+
+    return path
+
+
+def find_next_landmark(home, current, landmarks, time_left, obj):
+
+    minimum = float("-inf")
+    next = []
+
+    for i in xrange(0,len(landmarks)):
+        position = [landmarks[i].latitude,landmarks[i].longitude]
+        if not position in path:
+            time_foward = distance(current,position,obj)
+            time_back = distance(position,home,obj)
+            visit_time = landmarks[i].duration
+
+            time = time_foward+visit_time+time_back
+
+            if time > time_left:
+                continue
+            else:
+
+                if time < minimum:
+                    minimum = total
+                    next = position
+
+    return next
+
+# def distance(src, dest, obj):
+#     time = obj["rows"][index_src].elements[index_dest].duration.value
+#     return time
+
+
+
+
+
+
 
 def get_latitude_range(miles):
     earth_radius = 3960.0
@@ -86,14 +138,22 @@ def tour(request):
 
     r = requests.get(url)
 
-    return HttpResponse(r.text, content_type="application/json")
+    obj = r.json()
+
+
+
+    #path = tour([latitude,longitude], landmarks, time, obj)
+
+
+
+    return HttpResponse(obj["rows"][0]["elements"][0]["duration"]["text"], content_type="application/json")
 
 def update(request):
 
     latitude = float(request.GET['latitude'])
     longitude = float(request.GET['longitude'])
 
-    radius = 1.0 #in miles
+    radius = 100.0 #in miles
 
     lat_range = get_latitude_range(radius)
     long_range = get_longitude_range(latitude,radius)
