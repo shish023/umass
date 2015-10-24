@@ -18,4 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^send/', 'backend.views.send', name='send'),
+    url(r'^receive/', 'backend.views.receive', name='receive'),
 ]
