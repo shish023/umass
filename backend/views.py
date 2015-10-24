@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.core import serializers
 import requests
 import json
 import math
@@ -52,7 +53,13 @@ def tour(request):
     longitude = float(request.GET['longitude'])
     time = float(request.GET['time'])
 
-    radius = 10.0 #in miles
+    #radius = 10.0 # in miles
+
+    avg_speed = 25.0 # speed in mph
+
+    radius = avg_speed * time / 2.0
+
+    print radius
 
     lat_range = get_latitude_range(radius)
     long_range = get_longitude_range(latitude,radius)
@@ -75,25 +82,11 @@ def tour(request):
 
     parameters = "|".join(param_array)
 
-    url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+params+"&destinations="+params+"&key="+key
-
-    print url
+    url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+parameters+"&destinations="+parameters+"&key="+key
 
     r = requests.get(url)
 
-    print parameters
-
-    #obj = json.load(r.text)
-
-    #print(obj)
-
-
-
-    #calc_path()
-
-    #obj.rows.elements[i].duration[j].value
-
-    return HttpResponse(r.text)
+    return HttpResponse(r.text, content_type="application/json")
 
 def update(request):
 
@@ -107,10 +100,8 @@ def update(request):
 
     landmarks = Landmark.objects.filter(latitude__range=(latitude-lat_range, latitude+lat_range)).filter(longitude__range=(longitude-long_range, longitude+long_range))
 
-    content = {
-        "landmarks": landmarks,
-    }
+    content = serializers.serialize("json", landmarks)
 
-    return HttpResponse(content)
+    return HttpResponse(content, content_type="application/json")
 
 
