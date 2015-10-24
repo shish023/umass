@@ -71,7 +71,7 @@ def tour(request):
     param_array = []
 
     for l in landmarks:
-        param_array.append(str(l.latitude)+","+str(l.longitude)
+        param_array.append(str(l.latitude)+","+str(l.longitude))
 
     parameters = "|".join(param_array)
 
