@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^send/', 'backend.views.send', name='send'),
     url(r'^receive/', 'backend.views.receive', name='receive'),
     url(r'^tour/', 'backend.views.tour', name='tour'),
+    url(r'^update/', 'backend.views.update', name='update'),
 ]
