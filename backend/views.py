@@ -212,4 +212,20 @@ def update(request):
 
     return HttpResponse(content, content_type="application/json")
 
+def nearby(request):
+
+    latitude = float(request.GET['latitude'])
+    longitude = float(request.GET['longitude'])
+
+    radius = 0.310686 # in miles ( 500 meters )
+
+    lat_range = get_latitude_range(radius)
+    long_range = get_longitude_range(latitude,radius)
+
+    landmarks = Landmark.objects.filter(latitude__range=(latitude-lat_range, latitude+lat_range)).filter(longitude__range=(longitude-long_range, longitude+long_range))
+
+    content = serializers.serialize("json", landmarks)
+
+    return HttpResponse(content, content_type="application/json")
+
 

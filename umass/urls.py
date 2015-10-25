@@ -22,4 +22,5 @@ urlpatterns = [
     url(r'^receive/', 'backend.views.receive', name='receive'),
     url(r'^tour/', 'backend.views.tour', name='tour'),
     url(r'^update/', 'backend.views.update', name='update'),
+    url(r'^nearby/', 'backend.views.nearby', name='nearby'),
 ]
