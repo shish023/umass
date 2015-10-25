@@ -11,6 +11,41 @@ from .models import Landmark
 # Create your views here.
 
 
+def optimal(home, landmarks, time_left, obj, index_array):
+    no_of_landmarks = len(landmarks)
+    current = home
+    next = []
+    path = [home]
+    step = 0
+    landmark_array = []
+
+
+    while step < no_of_landmarks:
+
+        current = path[-1]
+        minimum = float("inf")
+
+        for i in xrange(0,no_of_landmarks):
+            position = [landmarks[i].latitude,landmarks[i].longitude]
+
+            if not position in path:
+                dist = distance(current,position,obj,index_array)
+
+                if dist < minimum:
+                    minimum = dist
+                    next = position
+
+        path.append(next)
+        ind = index_array.index(next)
+
+        if ind < no_of_landmarks:
+            landmark_array.append(landmarks[ind])
+
+        step += 1
+
+    return path, landmark_array
+
+
 def tour_plan(home, landmarks, time_left, obj, index_array):
     path = [home]
     no_of_landmarks = len(landmarks)
@@ -148,12 +183,14 @@ def tour(request):
 
     path, landmark_array = tour_plan([latitude,longitude], landmarks, time, obj, index_array)
 
-    if len(path) > 1:
-        content = serializers.serialize("json", landmark_array)
-    else:
-        content = landmark_array
+    opti_path, opti_landmarks = optimal([latitude,longitude], landmark_array, time, obj, index_array)
 
-    print len(path)
+    print opti_path
+
+    if len(path) > 1:
+        content = serializers.serialize("json", opti_landmarks)
+    else:
+        content = opti_landmarks
 
     return HttpResponse(content, content_type="application/json")
 
