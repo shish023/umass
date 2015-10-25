@@ -27,14 +27,16 @@ def tour_plan(home, landmarks, time_left, obj, index_array):
         else:
             time_left -= distance(current,next,obj,index_array)
             path.append(next)
-
-    for p in path:
-        ind = index_array.index(p)
-
-        if ind >= no_of_landmarks:
-            continue
-        else:
+            ind = index_array.index(next)
             landmark_array.append(landmarks[ind])
+
+    # for p in path:
+    #     ind = index_array.index(p)
+
+    #     if ind >= no_of_landmarks:
+    #         continue
+    #     else:
+    #         landmark_array.append(landmarks[ind])
 
     return path, landmark_array
 
@@ -49,7 +51,7 @@ def find_next_landmark(home, current, landmarks, path, time_left, obj, index_arr
         if not position in path:
             time_foward = distance(current,position,obj,index_array)
             time_back = distance(position,home,obj,index_array)
-            visit_time = landmarks[i].duration
+            visit_time = landmarks[i].duration*60.0
 
             time = time_foward+visit_time+time_back
 
@@ -66,8 +68,6 @@ def find_next_landmark(home, current, landmarks, path, time_left, obj, index_arr
 def distance(src, dest, obj, index_array):
     src_index = index_array.index(src)
     dest_index = index_array.index(dest)
-    print src_index
-    print dest_index
     time = obj["rows"][src_index]["elements"][dest_index]["duration"]["value"]
     return int(time)
 
@@ -111,17 +111,20 @@ def tour(request):
 
     #radius = 10.0 # in miles
 
-    avg_speed = 25.0 # speed in mph
+    avg_speed = 35.0 # speed in mph
 
-    radius = avg_speed * time / 2.0
+    radius = 20.0
 
-    time = time  * 60 * 60 # into seconds
+    time = time * 60.0 * 60.0 # into seconds
+
+    print radius
+    print time
 
     lat_range = get_latitude_range(radius)
     long_range = get_longitude_range(latitude,radius)
     landmarks = Landmark.objects.filter(latitude__range=(latitude-lat_range, latitude+lat_range)).filter(longitude__range=(longitude-long_range, longitude+long_range))
 
-    key = "AIzaSyBzznQtkrL18nK1bDyrSQkCbYOyFJTinp4"
+    key = "AIzaSyBkn91vJ3YoVNJm_eTaPbKMKDuEEDdZiQ4"
 
     parameters = ""
     param_array = []
@@ -139,20 +142,18 @@ def tour(request):
 
     url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+parameters+"&destinations="+parameters+"&key="+key
 
-    print url
-
     r = requests.get(url)
 
     obj = r.json()
 
     path, landmark_array = tour_plan([latitude,longitude], landmarks, time, obj, index_array)
 
-    if len(landmark_array) > 1:
+    if len(path) > 1:
         content = serializers.serialize("json", landmark_array)
     else:
         content = landmark_array
 
-
+    print len(path)
 
     return HttpResponse(content, content_type="application/json")
 
@@ -161,7 +162,7 @@ def update(request):
     latitude = float(request.GET['latitude'])
     longitude = float(request.GET['longitude'])
 
-    radius = 100.0 #in miles
+    radius = 20.0 #in miles
 
     lat_range = get_latitude_range(radius)
     long_range = get_longitude_range(latitude,radius)
