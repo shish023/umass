@@ -38,7 +38,7 @@ def optimal(home, landmarks, time_left, obj, index_array):
         path.append(next)
         ind = index_array.index(next)
 
-        if ind < no_of_landmarks:
+        if ind <  no_of_landmarks:
             landmark_array.append(landmarks[ind])
 
         step += 1
@@ -52,7 +52,7 @@ def tour_plan(home, landmarks, time_left, obj, index_array):
     current = home
     landmark_array =  []
 
-    while(len(path) < no_of_landmarks):
+    while(len(path) <= no_of_landmarks):
 
         current = path[-1]
         next = find_next_landmark(home, current, landmarks, path, time_left, obj, index_array)
@@ -159,7 +159,7 @@ def tour(request):
     long_range = get_longitude_range(latitude,radius)
     landmarks = Landmark.objects.filter(latitude__range=(latitude-lat_range, latitude+lat_range)).filter(longitude__range=(longitude-long_range, longitude+long_range))
 
-    key = "AIzaSyBkn91vJ3YoVNJm_eTaPbKMKDuEEDdZiQ4"
+    key = "AIzaSyDIJGasie4hGubvPqAtn_D33vDOnpAEloQ"
 
     parameters = ""
     param_array = []
@@ -182,10 +182,12 @@ def tour(request):
     obj = r.json()
 
     path, landmark_array = tour_plan([latitude,longitude], landmarks, time, obj, index_array)
+    print path
 
     opti_path, opti_landmarks = optimal([latitude,longitude], landmark_array, time, obj, index_array)
 
     print opti_path
+    print len(opti_landmarks)
 
     if len(path) > 1:
         content = serializers.serialize("json", opti_landmarks)
