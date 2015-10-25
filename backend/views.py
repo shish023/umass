@@ -11,39 +11,40 @@ from .models import Landmark
 # Create your views here.
 
 
-
-
-
-
-def tour(home, landmarks, time_left, obj):
+def tour_plan(home, landmarks, time_left, obj, index_array):
     path = [home]
     no_of_landmarks = len(landmarks)
-    current = [home]
+    current = home
+    landmark_array =  []
 
     while(len(path) < no_of_landmarks):
 
-        next = find_next_landmark(home, current, landmarks, time_left)
+        current = path[-1]
+        next = find_next_landmark(home, current, landmarks, path, time_left, obj, index_array)
 
-        if next == []:
+        if not next:
             return path
         else:
+            time_left -= distance(current,next,obj,index_array)
             path.append(next)
-            time_left -= distance(current,next)
-            current = next
 
-    return path
+    for p in path:
+        ind = index_array.index(p)
+        landmark_array.append(landmarks[ind])
+
+    return path, landmark_array
 
 
-def find_next_landmark(home, current, landmarks, time_left, obj):
-
-    minimum = float("-inf")
+def find_next_landmark(home, current, landmarks, path, time_left, obj, index_array):
+    minimum = float("inf")
     next = []
 
     for i in xrange(0,len(landmarks)):
         position = [landmarks[i].latitude,landmarks[i].longitude]
+
         if not position in path:
-            time_foward = distance(current,position,obj)
-            time_back = distance(position,home,obj)
+            time_foward = distance(current,position,obj,index_array)
+            time_back = distance(position,home,obj,index_array)
             visit_time = landmarks[i].duration
 
             time = time_foward+visit_time+time_back
@@ -53,19 +54,16 @@ def find_next_landmark(home, current, landmarks, time_left, obj):
             else:
 
                 if time < minimum:
-                    minimum = total
+                    minimum = time
                     next = position
 
     return next
 
-# def distance(src, dest, obj):
-#     time = obj["rows"][index_src].elements[index_dest].duration.value
-#     return time
-
-
-
-
-
+def distance(src, dest, obj, index_array):
+    src_index = index_array.index(src)
+    dest_index = index_array.index(dest)
+    time = obj["rows"][src_index]["elements"][dest_index]["duration"]["value"]
+    return int(time)
 
 
 def get_latitude_range(miles):
@@ -103,15 +101,13 @@ def tour(request):
 
     latitude = float(request.GET['latitude'])
     longitude = float(request.GET['longitude'])
-    time = float(request.GET['time'])
+    time = float(request.GET['time']) * 60 * 60
 
     #radius = 10.0 # in miles
 
     avg_speed = 25.0 # speed in mph
 
     radius = avg_speed * time / 2.0
-
-    print radius
 
     lat_range = get_latitude_range(radius)
     long_range = get_longitude_range(latitude,radius)
@@ -122,15 +118,17 @@ def tour(request):
 
     key = "AIzaSyBS_jDhoFpwRRS68Nfct_9RxQVGCpsaam4"
 
-    # time = 60 * 60 * 2
-    # landmarks = [43.082706,-79.074184,42.584810,-78.043524,42.876345,-78.878969,42.905689,-78.843432]
-    # position = [42.954632,-78.817884]
-
     parameters = ""
     param_array = []
+    index_array = []
 
     for l in landmarks:
         param_array.append(str(l.latitude)+","+str(l.longitude))
+        index_array.append([l.latitude,l.longitude])
+
+    param_array.append(str(latitude)+","+str(longitude))
+    index_array.append([latitude,longitude])
+
 
     parameters = "|".join(param_array)
 
@@ -140,13 +138,13 @@ def tour(request):
 
     obj = r.json()
 
+    path, landmark_array = tour_plan([latitude,longitude], landmarks, time, obj, index_array)
+
+    content = serializers.serialize("json", landmark_array)
 
 
-    #path = tour([latitude,longitude], landmarks, time, obj)
 
-
-
-    return HttpResponse(obj["rows"][0]["elements"][0]["duration"]["text"], content_type="application/json")
+    return HttpResponse(content, content_type="application/json")
 
 def update(request):
 
